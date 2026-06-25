@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rózsa Péter — recursion, and a function that outruns the loop</title>
+<meta name="description" content="LOGIKĒ XXII — Rózsa Péter (1905–1977). She founded recursion theory as a subject — the mathematics of functions defined in terms of themselves, the formal heart of what a computer can compute. She gave the Ackermann function its standard two-variable form (the Ackermann–Péter function): a function that is total and computable yet grows so explosively it cannot be built from simple bounded loops — proving 'primitive recursion' is not all of computation. Live: run the Ackermann–Péter function and watch it explode, and step primitive recursion building addition and multiplication. Honest: a Hungarian Jew who survived the Budapest ghetto and made recursion a field. David Lee Wise, two-layer honest.">
+<style>
+  :root{--bg:#0c0f17;--panel:#121622;--panel2:#19202f;--edge:#2a3346;--ink:#ede6d6;--dim:#b3ad9a;--faint:#7c7660;
+    --ochre:#d9b66a;--ochre2:#f0d79a;--proof:#5ad1ff;--proof2:#a7e6ff;--one:#7fe0a0;--zero:#fb7185;--amber:#fbbf24;--ember:#fb923c;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;--serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.58;background-image:radial-gradient(1100px 560px at 75% -10%,#1c2436 0%,transparent 55%),radial-gradient(900px 500px at 0% 100%,#14110a 0%,transparent 55%);}
+  .wrap{max-width:1000px;margin:0 auto;padding:44px 26px 90px}
+  header{border-bottom:1px solid var(--edge);padding-bottom:22px;margin-bottom:24px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--ochre);opacity:.95}
+  h1{font-family:Georgia,serif;font-size:38px;line-height:1.08;margin:.3em 0 .14em;font-weight:600}h1 em{color:var(--ochre2);font-style:italic}
+  .who{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.04em}
+  .sub{color:var(--dim);font-size:16px;max-width:74ch;margin-top:14px}.sub b{color:var(--ink)}
+  .verdicts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:22px 0}@media(max-width:720px){.verdicts{grid-template-columns:1fr}}
+  .vc{border:1px solid var(--edge);border-radius:11px;padding:13px 15px;border-top-width:3px;background:rgba(18,22,34,.6)}
+  .vc .badge{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em}
+  .vc.s{border-top-color:var(--one)}.vc.s .badge{color:var(--one)} .vc.m{border-top-color:var(--amber)}.vc.m .badge{color:var(--amber)} .vc.f{border-top-color:var(--ember)}.vc.f .badge{color:var(--ember)}
+  .vc p{font-size:12px;color:var(--dim);margin:6px 0 0;line-height:1.45}.vc p b{color:var(--ink)}
+  section{margin:36px 0}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--ochre2);border-left:2px solid var(--ochre);padding-left:11px;margin:0 0 6px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 18px;max-width:80ch}
+  .panel{background:linear-gradient(180deg,var(--panel),#0a0d14);border:1px solid var(--edge);border-radius:14px;padding:20px;box-shadow:0 24px 60px -40px #000}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:#1a2030;border:1px solid var(--edge);border-radius:8px;padding:8px 12px;cursor:pointer}button:hover{background:#222b3e;border-color:var(--ochre)}
+  select{font-family:var(--mono);font-size:12px;color:var(--ink);background:#1a2030;border:1px solid var(--edge);border-radius:8px;padding:7px 9px}
+  .ack{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:6px}
+  .ac{border:1px solid var(--edge);border-radius:10px;padding:12px;background:rgba(0,0,0,.16);text-align:center}
+  .ac .l{font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .ac .v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--one);margin-top:6px;word-break:break-all}
+  .ac .c{font-family:var(--mono);font-size:10px;color:var(--proof2);margin-top:5px}
+  .ac.huge .v{color:var(--ember);font-size:14px}
+  .recur{font-family:var(--mono);font-size:13px;line-height:1.7;background:#0c1622;border:1px solid var(--edge);border-radius:9px;padding:13px;margin-top:12px;white-space:pre-wrap;color:var(--proof2)}
+  .note{color:var(--dim);font-size:13.5px;border-left:2px solid var(--edge);padding-left:13px;margin:16px 0 0}.note b{color:var(--ink)}
+  .step{font-family:var(--mono);font-size:13px;color:var(--one);margin-top:10px;white-space:pre-wrap}
+  .thm{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}@media(max-width:620px){.thm{grid-template-columns:1fr}}
+  .tm{border:1px solid var(--edge);border-radius:10px;padding:13px 15px;background:rgba(0,0,0,.14)}.tm b{color:var(--ochre2);font-family:var(--mono);font-size:11px}.tm p{font-size:13px;color:var(--dim);margin:6px 0 0}
+  footer{margin-top:44px;border-top:1px solid var(--edge);padding-top:18px;color:var(--faint);font-family:var(--mono);font-size:11px;line-height:1.7}
+  footer a,.bar2 a{color:var(--ochre)}.bar2{font-family:var(--mono);font-size:11.5px;margin-bottom:16px}.bar2 a{text-decoration:none;border-bottom:1px dotted #4a4126}
+  code{font-family:var(--mono);color:var(--ochre2);background:#15120a;padding:1px 5px;border-radius:5px}
+  blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--ochre);color:var(--ink);font-style:italic;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar2"><a href="https://davidwise01.github.io/ud0/">◄ UD0</a> &nbsp; <a href="https://davidwise01.github.io/christine-ladd-franklin/">← Ladd-Franklin</a> &nbsp; LOGIKĒ · XXII · the other half</div>
+<header>
+  <div class="kicker">LOGIKĒ · XXII · recursion, and a function that outruns the loop</div>
+  <h1>Rózsa <em>Péter</em></h1>
+  <div class="who">1905 – 1977 · Budapest · founder of recursion theory · author of "Recursive Functions" (1951) &amp; "Playing with Infinity"</div>
+  <div class="sub">When Gödel, Church, and Turing pinned down what a machine can compute, the engine under all of it was <b>recursion</b> — functions defined in terms of themselves. Rózsa Péter took that engine and made it a <em>subject</em>: her 1951 book <b>Recursive Functions</b> was the first systematic treatment, and she is rightly called a founder of <b>recursion theory</b>, the mathematics of computability. Her signature result is a single, startling function. The "safe" functions — built from <b>primitive recursion</b>, the bounded loops every beginner writes — seem like they should be everything. Péter's two-variable form of the <b>Ackermann function</b> is <em>total</em> and <em>computable</em>, yet grows so violently it provably escapes them: a function no bounded loop can hold.</div>
+</header>
+<div class="verdicts">
+  <div class="vc s"><span class="badge">✓ STRONG</span><p><b>A field, and a theorem.</b> Péter systematised recursion theory and gave the Ackermann function its standard two-argument form — a clean, total, computable function proven to outrun primitive recursion. Rigorous and foundational to computability.</p></div>
+  <div class="vc m"><span class="badge">◐ SHARED ROOTS</span><p><b>Built on Ackermann, with others.</b> Wilhelm Ackermann found the original; Péter simplified and generalised it (the "Ackermann–Péter function") and built the surrounding theory. Recursion theory also has Gödel, Kleene, and others in its parentage.</p></div>
+  <div class="vc f"><span class="badge">◔ SURVIVED TO BUILD IT</span><p><b>The work was done against history.</b> A Hungarian Jew, she lost her teaching post under the fascist laws and survived confinement in the Budapest ghetto; she wrote much of her foundational work in and after that. The mathematics carried through.</p></div>
+</div>
+
+<section>
+  <h2>I · The Ackermann–Péter function — total, computable, unbounded</h2>
+  <p class="lede">The rule is tiny: <code>A(0,n)=n+1</code>; <code>A(m,0)=A(m−1,1)</code>; <code>A(m,n)=A(m−1, A(m,n−1))</code>. It always halts (it is total and computable). But watch the value — and the number of recursive calls — as <b>m</b> climbs. By <code>m=4</code> the result is a tower of exponentials; the function provably grows faster than <em>anything</em> you can write with bounded <code>for</code>-loops. That is the proof that <b>primitive recursion ≠ all computation.</b></p>
+  <div class="panel">
+    <div class="controls">
+      m = <select id="m"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+      n = <select id="n"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+      <button id="go">compute A(m, n) ▸</button>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--faint)">(inputs capped — it explodes fast)</span>
+    </div>
+    <div class="ack" id="ack"></div>
+    <div class="note" id="anote">A(2,n) is roughly 2n+3; A(3,n) is exponential (2ⁿ⁺³−3); A(4,n) is a tower of 2's of height n — A(4,2) already has 19,729 digits. Each is computed by pure recursion, no loop bound in sight. ⚑ This is the precise mathematical line between "what a simple loop can do" and "what computation can do" — and Péter drew it.</div>
+  </div>
+  <blockquote>"Mathematics is one of the oldest of the sciences and yet one of the youngest — for it grows by what it learns to ask." <span style="color:var(--faint);font-style:normal;font-size:12px">— in the spirit of Rózsa Péter, "Playing with Infinity"</span></blockquote>
+</section>
+
+<section>
+  <h2>II · Primitive recursion — building arithmetic from the successor</h2>
+  <p class="lede">Recursion theory starts from almost nothing: zero, the <b>successor</b> (+1), and the schema of <em>primitive recursion</em> — define a function's value at <code>n+1</code> from its value at <code>n</code>. From that alone, all of basic arithmetic unfolds. Watch addition and multiplication build themselves by recursion.</p>
+  <div class="panel">
+    <div class="controls">
+      <button id="addBtn" class="on">add(a, b) — by recursion on b</button>
+      <button id="mulBtn">mult(a, b) — by recursion on b</button>
+      a = <select id="ra"><option>2</option><option selected>3</option><option>4</option></select>
+      b = <select id="rb"><option>2</option><option selected>3</option><option>4</option></select>
+      <button id="unfold">unfold ▸</button>
+    </div>
+    <div class="recur" id="defn"></div>
+    <div class="step" id="trace"></div>
+    <div class="note">Addition is "apply successor b times"; multiplication is "add a, b times" — each defined purely by recursion on the previous case, no magic. ⚑ These are <b>primitive recursive</b>: safe, always-halting, loop-bounded. Péter's achievement was to map this whole world precisely — <em>and</em> to show, with Ackermann's function, exactly where it ends.</div>
+  </div>
+</section>
+
+<section>
+  <h2>III · The field, the limit, the survivor</h2>
+  <div class="thm">
+    <div class="tm"><b>RECURSION THEORY</b><p>Her "Recursive Functions" (1951) was the first book to organise the theory of computable functions as a subject — a cornerstone of the mathematics of computation.</p></div>
+    <div class="tm"><b>THE ACKERMANN–PÉTER FUNCTION</b><p>A total computable function that is provably <em>not</em> primitive recursive — the clean witness that bounded loops are weaker than full computation.</p></div>
+  </div>
+  <p class="note" style="border-color:var(--amber);margin-top:16px"><b style="color:var(--amber)">Gate kept on.</b> The mathematics is <b>solid and foundational</b> — recursion theory is a pillar of computability, and the two-variable Ackermann function is a textbook result, total and computable yet beyond primitive recursion. Honest attributions: the original function is <b>Wilhelm Ackermann's</b> (1928); Péter gave the standard two-argument simplification now usually taught (hence "Ackermann–Péter"), and her larger and more important contribution was making recursion theory a coherent <em>field</em> — though Gödel, Kleene, and others share its foundations. The woman: <b>Rózsa Péter</b> (born Politzer) was a Hungarian Jew who, under Hungary's fascist racial laws, was <b>dismissed from teaching</b> and forbidden to work, and survived confinement in the <b>Budapest ghetto</b> during the war — doing and preserving mathematics through it. Afterward she became a beloved professor and wrote <em>Playing with Infinity</em>, one of the finest popular books on mathematics ever written, insisting the subject was for everyone. She made the theory of "functions that call themselves" into a science — the formal soul of every program that loops or recurses in [[psephos-processors-domain]]. ⚑ [[christine-ladd-franklin]] ← · next → Julia Robinson.</p>
+</section>
+
+<footer>
+  RÓZSA PÉTER · LOGIKĒ XXII · two-layer honest · the other half<br>
+  live Ackermann–Péter function (A(0,n)=n+1; A(m,0)=A(m−1,1); A(m,n)=A(m−1,A(m,n−1)); total, computable, beyond primitive recursion — verified A(2,2)=7, A(3,3)=61) + primitive recursion building add &amp; mult<br>
+  founder of recursion theory · "Recursive Functions" (1951) · the two-variable Ackermann form · "Playing with Infinity"<br>
+  ← <a href="https://davidwise01.github.io/christine-ladd-franklin/">Ladd-Franklin</a> · next → <b>Julia Robinson</b> (Hilbert's 10th problem)<br>
+  LOGIKĒ · the lineage of logical mathematics · governor David Lee Wise · CC-BY-ND-4.0
+</footer>
+</div>
+<script>
+"use strict";
+// ---------- MODULE I : Ackermann–Péter ----------
+(function(){
+  const $=id=>document.getElementById(id);
+  function ackCounted(m,n){
+    let calls=0; const CAP=4000000;
+    function A(m,n){ calls++; if(calls>CAP) throw new Error("cap"); if(m===0) return n+1; if(n===0) return A(m-1,1); return A(m-1,A(m,n-1)); }
+    try{ const v=A(m,n); return {v, calls, ok:true}; }catch(e){ return {ok:false, calls}; }
+  }
+  // for big m=4 we describe rather than compute
+  const DESC={
+    "4,0":"13", "4,1":"65533", "4,2":"2^65536 − 3  (19,729 digits)", "4,3":"a tower of 2s — astronomically large", "4,4":"beyond cosmic scale"
+  };
+  function go(){
+    const m=+$('m').value, n=+$('n').value;
+    let html='';
+    if(m<4){
+      const r=ackCounted(m,n);
+      html='<div class="ac"><div class="l">A('+m+', '+n+')</div><div class="v">'+(r.ok?r.v:'(too deep)')+'</div><div class="c">'+(r.ok?(r.calls.toLocaleString()+' recursive calls'):'exceeded the call cap')+'</div></div>';
+    } else {
+      const key=m+','+n; const d=DESC[key]||"astronomically large";
+      html='<div class="ac huge"><div class="l">A(4, '+n+')</div><div class="v">'+d+'</div><div class="c">too large to compute — but it is a finite, well-defined number</div></div>';
+    }
+    // also show the m-row growth at this n for context
+    $('ack').innerHTML=html;
+    $('anote').scrollIntoView?null:null;
+  }
+  $('go').onclick=go;
+  go();
+})();
+
+// ---------- MODULE II : primitive recursion ----------
+(function(){
+  const $=id=>document.getElementById(id);
+  let mode='add';
+  function setMode(m){ mode=m; $('addBtn').classList.toggle('on',m==='add'); $('mulBtn').classList.toggle('on',m==='mult');
+    $('defn').textContent = m==='add'
+      ? "add(a, 0)     = a\nadd(a, b+1) = succ( add(a, b) )"
+      : "mult(a, 0)     = 0\nmult(a, b+1) = add( a, mult(a, b) )";
+    unfold();
+  }
+  function unfold(){
+    const a=+$('ra').value, b=+$('rb').value;
+    const lines=[];
+    if(mode==='add'){
+      let expr='add('+a+', '+b+')';
+      for(let k=b;k>0;k--) lines.push('add('+a+', '+k+') = succ( add('+a+', '+(k-1)+') )');
+      lines.push('add('+a+', 0) = '+a);
+      // fold back
+      let val=a; const folds=[]; for(let k=1;k<=b;k++){ val=val+1; folds.push('= succ → '+val); }
+      lines.push(''); lines.push('⇒ '+a+' + '+b+' = '+(a+b));
+    } else {
+      for(let k=b;k>0;k--) lines.push('mult('+a+', '+k+') = add('+a+', mult('+a+', '+(k-1)+') )');
+      lines.push('mult('+a+', 0) = 0');
+      lines.push(''); lines.push('⇒ '+a+' × '+b+' = '+(a*b));
+    }
+    $('trace').textContent=lines.join('\n');
+  }
+  $('addBtn').onclick=()=>setMode('add');
+  $('mulBtn').onclick=()=>setMode('mult');
+  $('unfold').onclick=unfold;
+  $('ra').onchange=unfold; $('rb').onchange=unfold;
+  setMode('add');
+})();
+</script>
+</body>
+</html>
