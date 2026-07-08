@@ -1,0 +1,9 @@
+ROOT0-DLW-CHAIN-v1
+index : 1011
+slug  : rozsa-peter
+seal  : 32c13b72553f76bea82a756fae2d728459d37f235d7125bcb11443f963936aa6
+prev  : ab321a2ee83828cb89580625667f0376a7d7f1896877ca05c376bbe96184ccb3
+link  : 09117100421db82676e4aba3fddd7f7ff0d05c99877514c9d85dde62a664c6e4
+head  : 3447d3a0533aaf1e29a8bdc67a9774884fb3ae9dbc8a17064b7a008ca3c4ec90
+
+— the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
